@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "模块化、轻量级且支持完全自定义的 [mirai](https://github.com/mamoe/mirai) 加载器。",
   "scripts": {
-    "start:server": ".\\mcl",
+    "start:server": ".\\mcl -u",
     "start:client": "ts-node ./packages/entry/index.ts"
   },
   "repository": {

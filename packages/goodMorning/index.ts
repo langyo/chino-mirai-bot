@@ -11,7 +11,7 @@ function reply(qq: number, reply: GroupMessage['reply']) {
     return;
   }
   if (rank.map(n => n.qq).indexOf(qq) >= 0) {
-    reply('你已经说过早安了哦~', true);
+    reply(' 你已经说过早安了哦~', true);
     // 一小时内不再回复
     ban.push(qq);
     setInterval(() => {
@@ -20,19 +20,19 @@ function reply(qq: number, reply: GroupMessage['reply']) {
   } else {
     const now = new Date();
     if (now.getHours() <= 8 && now.getHours() >= 5) {
-      reply(`早~${rank.length < 30 ? `你是第${rank.length + 1}个起床的哦~` : ''}`, true);
+      reply(` 早~${rank.length < 30 ? `你是第${rank.length + 1}个起床的哦~` : ''}`, true);
       rank.push({ date: now, qq });
     } else if (now.getHours() < 5) {
-      reply(`好像还太早了吧？`, true);
+      reply(` 好像还太早了吧？`, true);
     } else if (now.getHours() > 8  && now.getHours() <= 10) {
-      reply(`早~起的有点晚了哦~`, true);
+      reply(` 早~起的有点晚了哦~`, true);
       // 一小时内不再回复
       ban.push(qq);
       setInterval(() => {
         ban = ban.filter(n => n !== qq);
       }, 60 * 60 * 1000);
     } else {
-      reply(`现在好像不是时候吧……`, true);
+      reply(` 现在好像不是时候吧……`, true);
       // 一小时内不再回复
       ban.push(qq);
       setInterval(() => {

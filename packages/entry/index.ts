@@ -95,10 +95,10 @@ import '../qrcodeParser';
     if (msg.type === 'GroupMessage') {
       switch (msg.plain) {
         case '管理指令提示':
-          msg.reply(`模块管理器暂不可用`, true);
+          msg.reply(` 模块管理器暂不可用`, true);
           break;
         case '指令提示':
-          msg.reply(`指令提示暂不可用`, true);
+          msg.reply(` 指令提示暂不可用`, true);
           break;
         default:
           const args = msg.plain.split(' ');
