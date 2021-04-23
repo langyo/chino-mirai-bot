@@ -22,3 +22,13 @@ const mirai = new Mirai({
   });
   mirai.listen();
 })();
+
+import '../goodMorning';
+import '../imageLibrary';
+import '../judgement';
+import '../messageKeeper';
+import '../messageLibrary';
+import '../phonograph';
+import '../repeater';
+import '../ticketCollector';
+import '../twitterMonitor';
