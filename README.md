@@ -1,5 +1,9 @@
 # 香风智乃萌战应援群机器人
 
+![入群二维码](https://i.niupic.com/images/2021/04/24/9gJS.png)
+
+欢迎加入[香风智乃萌战应援群](https://jq.qq.com/?_wv=1027&k=JF73yG0b)！
+
 ## 启动
 
 - 安装 Java 运行时（版本必须 >= 11）
