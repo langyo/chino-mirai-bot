@@ -5,20 +5,20 @@
   "packages": [
     {
       "id": "net.mamoe:mirai-console",
-      "channel": "stable",
-      "version": "2.5.2",
+      "channel": "beta",
+      "version": "2.6-M1",
       "type": "libs"
     },
     {
       "id": "net.mamoe:mirai-console-terminal",
-      "channel": "stable",
-      "version": "2.5.2",
+      "channel": "beta",
+      "version": "2.6-M1",
       "type": "libs"
     },
     {
       "id": "net.mamoe:mirai-core-all",
-      "channel": "stable",
-      "version": "2.5.2",
+      "channel": "beta",
+      "version": "2.6-M1",
       "type": "libs"
     },
     {

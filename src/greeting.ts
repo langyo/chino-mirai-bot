@@ -18,7 +18,7 @@ registerMiddleware('早安', '早安问候模块', async (msg, _api, _state) => 
       return;
     }
     if (rank.map(n => n.qq).indexOf(qq) >= 0) {
-      reply(' 你已经说过早安了哦~', true);
+      reply('你已经说过早安了哦~', true);
       // 一小时内不再回复
       ban.push(qq);
       setInterval(() => {
@@ -63,7 +63,7 @@ registerMiddleware('晚安', '晚安问候模块', async (msg, _api, _state) => 
       return;
     }
     if (rank.map(n => n.qq).indexOf(qq) >= 0) {
-      reply(' 咦？你原来还没睡的嘛~赶快睡吧~', true);
+      reply('咦？你原来还没睡的嘛~赶快睡吧~', true);
       // 一小时内不再回复
       ban.push(qq);
       setInterval(() => {
