@@ -88,6 +88,8 @@ import '../repeater';
 import '../ticketCollector';
 import '../twitterMonitor';
 import '../qrcodeParser';
+import '../counterWithdrawal';
+import '../permissionForwarding';
 
 (async () => {
   await mirai.link(qq);
