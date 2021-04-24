@@ -10,48 +10,58 @@ const mirai = new Mirai({
   authKey: '114514aaaaaaaa',
   enableWebsocket: true,
 });
+export const log = mirai.logger;
 
 (async () => {
   const ROBOT_QQ = 1931838621;
 
   await mirai.link(ROBOT_QQ);
-  mirai.on('message', msg => {
+  mirai.on('message', async msg => {
     if (msg.type === 'GroupMessage') {
-      switch (msg.plain) {
-        case '管理指令提示':
-          msg.reply(` 模块管理器暂不可用`, true);
-          break;
-        case '指令提示':
-          msg.reply(` 指令提示暂不可用`, true);
-          break;
-        default:
-          const args = msg.plain.split(' ');
-          for (const moduleName of Object.keys(triggers)) {
-            if (Object.keys(triggers[moduleName]).indexOf(args[0]) >= 0) {
-              if (Object.keys(triggers[moduleName][args[0]]).indexOf(args[1]) >= 0) {
-                triggers[moduleName][args[0]][args[1]].trigger(
-                  args.slice(2), msg, mirai, stateManagerConstructor(moduleName)
-                );
-                break;
-              } else {
-                triggers[moduleName][args[0]]['*'].trigger(
-                  args.slice(1), msg, mirai, stateManagerConstructor(moduleName)
-                );
-                break;
+      if (msg.isAt(ROBOT_QQ)) {
+        switch (msg.plain.trim()) {
+          case '管理':
+            mirai.api.sendGroupMessage(`当前机器人运行状态正常
+Middlewares: ${middlewares.map(n => n.module).join(', ')}
+Triggers: ${Object.keys(triggers).join(', ')}`, msg.sender.group.id);
+            break;
+          case '?':
+            msg.reply(` 指令提示暂不可用`, true);
+            break;
+          default:
+            const args = msg.plain.split(' ');
+            for (const moduleName of Object.keys(triggers)) {
+              if (Object.keys(triggers[moduleName]).indexOf(args[0]) >= 0) {
+                if (Object.keys(triggers[moduleName][args[0]]).indexOf(args[1]) >= 0) {
+                  triggers[moduleName][args[0]][args[1]].trigger(
+                    args.slice(2), msg, mirai.api, stateManagerConstructor(moduleName)
+                  );
+                  break;
+                } else {
+                  triggers[moduleName][args[0]]['*'].trigger(
+                    args.slice(1), msg, mirai.api, stateManagerConstructor(moduleName)
+                  );
+                  break;
+                }
               }
             }
+            break;
+        }
+      } else {
+        let i = 0;
+        while (!await middlewares[i].middleware(
+          msg, mirai.api, stateManagerConstructor(middlewares[i].module)
+        )) {
+          i += 1;
+          if (middlewares.length <= i) {
+            break;
           }
-          break;
+        }
       }
     }
   });
   mirai.listen();
 })();
-
-// ------
-// 日志对象
-// ------
-export const log = mirai.logger;
 
 // ------
 // 针对全局的信息存贮设施，使用本地文件系统，以 JSON 存储
@@ -62,12 +72,12 @@ const GLOBAL_CONFIG_FILE_PATH = join(__dirname, '../config/robotGlobalSettings.j
 try {
   accessSync(GLOBAL_CONFIG_FILE_PATH);
 } catch (e) {
-  log.info('新的全局配置文件已建立');
+  log.success('新的全局配置文件已建立');
   writeFileSync(GLOBAL_CONFIG_FILE_PATH, JSON.stringify({}));
 }
 
 let globalState = JSON.parse(readFileSync(GLOBAL_CONFIG_FILE_PATH, 'utf-8'));
-log.info('全局配置文件已准备完毕');
+log.success('全局配置文件已准备完毕');
 function getGlobalState(module: string, key: string) {
   if (
     typeof globalState[module] !== 'undefined' &&
@@ -94,7 +104,7 @@ connect('mongodb://localhost/chino-mirai-bot', {
   useNewUrlParser: true, useUnifiedTopology: true
 });
 db.once('open', () => {
-  log.info('本地数据库已建立连接');
+  log.success('本地数据库已建立连接');
 });
 db.on('error', err => {
   log.error(err);
@@ -126,8 +136,11 @@ function stateManagerConstructor(moduleName: string): Readonly<IStateManager> {
 // 模块管理器
 // ------
 type ITrigger = (
-  args: string[], msg: GroupMessage, ctx: Mirai, state: IStateManager
+  args: string[], msg: GroupMessage, api: Mirai['api'], state: IStateManager
 ) => Promise<void>;
+type IMiddleware = (
+  msg: GroupMessage, api: Mirai['api'], state: IStateManager
+) => Promise<boolean>;
 
 let triggers: {
   [module: string]: {
@@ -139,50 +152,61 @@ let triggers: {
     }
   }
 } = {};
+let middlewares: {
+  module: string,
+  description: string,
+  middleware: IMiddleware
+}[] = [];
 
 export function registerCommand(
-  moduleName: string,
+  module: string,
   command: [string] | [string, string],
   description: string,
   trigger: ITrigger
 ) {
-  if (typeof triggers[moduleName] === 'undefined') {
-    triggers[moduleName] = {};
+  if (typeof triggers[module] === 'undefined') {
+    triggers[module] = {};
   }
-  if (typeof triggers[moduleName][command[0]] === 'undefined') {
-    triggers[moduleName][command[0]] = {};
+  if (typeof triggers[module][command[0]] === 'undefined') {
+    triggers[module][command[0]] = {};
   }
   if (typeof command[1] !== 'undefined') {
-    if (typeof triggers[moduleName][command[0]][command[1]] === 'undefined') {
-      triggers[moduleName][command[0]][command[1]] = {
+    if (typeof triggers[module][command[0]][command[1]] === 'undefined') {
+      triggers[module][command[0]][command[1]] = {
         description, trigger
       };
     } else {
-      throw Error(`重复的指令定义: ${moduleName}.${command[0]}.${command[1]}`);
+      throw Error(`重复的指令定义: ${module}.${command[0]}.${command[1]}`);
     }
   } else {
-    if (typeof triggers[moduleName][command[0]]['*'] === 'undefined') {
-      triggers[moduleName][command[0]]['*'] = {
+    if (typeof triggers[module][command[0]]['*'] === 'undefined') {
+      triggers[module][command[0]]['*'] = {
         description, trigger
       };
     } else {
-      throw Error(`重复的指令定义: ${moduleName}.${command[0]}`);
+      throw Error(`重复的指令定义: ${module}.${command[0]}`);
     }
   }
+}
+
+export function registerMiddleware(
+  module: string,
+  description: string,
+  middleware: IMiddleware
+) {
+  middlewares.push({ module, description, middleware });
 }
 
 // ------
 // 批量载入模块
 // ------
-import './goodMorning';
+import './greeting';
 import './imageLibrary';
 import './judgement';
 import './messageKeeper';
 import './messageLibrary';
+import './permissionForwarding';
 import './phonograph';
 import './repeater';
 import './ticketCollector';
 import './twitterMonitor';
-import './qrcodeParser';
-import './counterWithdrawal';
-import './permissionForwarding';
