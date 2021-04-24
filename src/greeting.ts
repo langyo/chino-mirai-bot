@@ -6,7 +6,7 @@ let rank: { date: Date, qq: number }[] = [];
 let ban: number[] = [];
 
 // 正则常量
-const morningRegExp = /^.*(早)|(早安)|(早上好)|(哦哈呦)|(喵帕斯)$/;
+const morningRegExp = /^((早)|(.*(早安)|(早上好)|(哦哈呦)|(喵帕斯)))$/;
 const nightRegExp = /^.*晚安.*$/;
 
 registerMiddleware('早安', '早安问候模块', async (msg, _api, _state) => {
