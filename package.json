@@ -21,6 +21,8 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "mirai-ts": "^1.0.4"
+    "chalk": "^4.1.1",
+    "mirai-ts": "^1.0.4",
+    "mongoose": "^5.12.5"
   }
 }
