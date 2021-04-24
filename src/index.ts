@@ -22,8 +22,8 @@ export const log = mirai.logger;
         switch (msg.plain.trim()) {
           case '管理':
             mirai.api.sendGroupMessage(`当前机器人运行状态正常
-Middlewares: ${middlewares.map(n => n.module).join(', ')}
-Triggers: ${Object.keys(triggers).join(', ')}`, msg.sender.group.id);
+在运行的通用中间件: ${middlewares.map(n => n.module).join(', ')}
+在运行的指令触发器: ${Object.keys(triggers).join(', ')}`, msg.sender.group.id);
             break;
           case '?':
             msg.reply(` 指令提示暂不可用`, true);

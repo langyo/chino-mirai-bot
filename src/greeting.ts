@@ -5,11 +5,15 @@ let rank: { date: Date, qq: number }[] = [];
 // 防止重复刷屏用的反复读保护
 let ban: number[] = [];
 
+// 正则常量
+const morningRegExp = /^.*(早)|(早安)|(早上好)|(哦哈呦)|(喵帕斯)$/;
+const nightRegExp = /^.*晚安.*$/;
+
 registerMiddleware('早安', '早安问候模块', async (msg, _api, _state) => {
   const qq = msg.sender.id;
   const reply = msg.reply;
 
-  if (/^.*(早)|(早安)|(早上好)|(哦哈呦)|(喵帕斯)$/.test(msg.plain)) {
+  if (morningRegExp.test(msg.plain)) {
     if (ban.indexOf(qq) >= 0) {
       return;
     }
@@ -54,7 +58,7 @@ registerMiddleware('晚安', '晚安问候模块', async (msg, _api, _state) => 
   const qq = msg.sender.id;
   const reply = msg.reply;
 
-  if (/^.*晚安.*$/.test(msg.plain)) {
+  if (nightRegExp.test(msg.plain)) {
     if (ban.indexOf(qq) >= 0) {
       return;
     }
