@@ -47,7 +47,7 @@ let triggers: {
   }
 } = {};
 
-export function registerGroupMessage(
+export function registerCommand(
   moduleName: string,
   command: [string] | [string, string],
   description: string,
@@ -78,18 +78,18 @@ export function registerGroupMessage(
   }
 }
 
-import '../goodMorning';
-import '../imageLibrary';
-import '../judgement';
-import '../messageKeeper';
-import '../messageLibrary';
-import '../phonograph';
-import '../repeater';
-import '../ticketCollector';
-import '../twitterMonitor';
-import '../qrcodeParser';
-import '../counterWithdrawal';
-import '../permissionForwarding';
+import './goodMorning';
+import './imageLibrary';
+import './judgement';
+import './messageKeeper';
+import './messageLibrary';
+import './phonograph';
+import './repeater';
+import './ticketCollector';
+import './twitterMonitor';
+import './qrcodeParser';
+import './counterWithdrawal';
+import './permissionForwarding';
 
 (async () => {
   await mirai.link(qq);

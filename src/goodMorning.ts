@@ -1,5 +1,5 @@
 import { GroupMessage } from 'mirai-ts/dist/types/message-type';
-import { registerGroupMessage } from '../entry';
+import { registerCommand } from './index';
 
 // 当天排名
 let rank: { date: Date, qq: number }[] = [];
@@ -42,12 +42,12 @@ function reply(qq: number, reply: GroupMessage['reply']) {
   }
 }
 
-registerGroupMessage('早安', ['早'], '', async (_args, msg, _ctx, _config) => {
+registerCommand('早安', ['早'], '', async (_args, msg, _ctx, _config) => {
   reply(msg.sender.id, msg.reply);
 });
-registerGroupMessage('早安', ['早安'], '', async (_args, msg, _ctx, _config) => {
+registerCommand('早安', ['早安'], '', async (_args, msg, _ctx, _config) => {
   reply(msg.sender.id, msg.reply);
 });
-registerGroupMessage('早安', ['早上好'], '', async (_args, msg, _ctx, _config) => {
+registerCommand('早安', ['早上好'], '', async (_args, msg, _ctx, _config) => {
   reply(msg.sender.id, msg.reply);
 });
