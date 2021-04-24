@@ -22,36 +22,16 @@ export const log = mirai.logger;
         switch (msg.plain.trim()) {
           case '管理':
             mirai.api.sendGroupMessage(`当前机器人运行状态正常
-在运行的通用中间件: ${middlewares.map(n => n.module).join(', ')}
-在运行的指令触发器: ${Object.keys(triggers).join(', ')}`, msg.sender.group.id);
+在运行的组件列表: ${middlewares.map(n => n.module).join(', ')}`, msg.sender.group.id);
             break;
           case '?':
             msg.reply(` 指令提示暂不可用`, true);
             break;
           default:
-            const args = msg.plain.split(' ');
-            for (const moduleName of Object.keys(triggers)) {
-              if (Object.keys(triggers[moduleName]).indexOf(args[0]) >= 0) {
-                if (Object.keys(triggers[moduleName][args[0]]).indexOf(args[1]) >= 0) {
-                  triggers[moduleName][args[0]][args[1]].trigger(
-                    args.slice(2), msg, mirai.api, stateManagerConstructor(moduleName)
-                  );
-                  break;
-                } else {
-                  triggers[moduleName][args[0]]['*'].trigger(
-                    args.slice(1), msg, mirai.api, stateManagerConstructor(moduleName)
-                  );
-                  break;
-                }
-              }
-            }
-            break;
         }
       } else {
         let i = 0;
-        while (!await middlewares[i].middleware(
-          msg, mirai.api, stateManagerConstructor(middlewares[i].module)
-        )) {
+        while (!await middlewares[i].middleware(msg, mirai.api)) {
           i += 1;
           if (middlewares.length <= i) {
             break;
@@ -78,7 +58,7 @@ try {
 
 let globalState = JSON.parse(readFileSync(GLOBAL_CONFIG_FILE_PATH, 'utf-8'));
 log.success('全局配置文件已准备完毕');
-function getGlobalState(module: string, key: string) {
+export function getGlobalState(module: string, key: string) {
   if (
     typeof globalState[module] !== 'undefined' &&
     typeof globalState[module][key] !== 'undefined'
@@ -88,7 +68,7 @@ function getGlobalState(module: string, key: string) {
     return undefined;
   }
 }
-function setGlobalState(module: string, key: string, value: string) {
+export function setGlobalState(module: string, key: string, value: string) {
   if (typeof globalState[module] === 'undefined') {
     globalState[module] = {};
   }
@@ -108,86 +88,24 @@ db.once('open', () => {
 });
 db.on('error', err => {
   log.error(err);
-})
-
-interface IStateManager {
-  get(qq: number, key: string): string,
-  getGlobal(key: string): string,
-  set(qq: number, key: string, val: string): void,
-  setGlobal(key: string, val: string): void
-}
-
-function stateManagerConstructor(moduleName: string): Readonly<IStateManager> {
-  return Object.seal({
-    get(qq: number, key: string): string {
-      return '';
-    },
-    getGlobal(key: string): string {
-      return '';
-    },
-    set(qq: number, key: string, val: string) {
-    },
-    setGlobal(key: string, val: string) {
-    }
-  });
-}
+});
+export { db };
 
 // ------
 // 模块管理器
 // ------
 type ITrigger = (
-  args: string[], msg: GroupMessage, api: Mirai['api'], state: IStateManager
+  args: string[], msg: GroupMessage, api: Mirai['api']
 ) => Promise<void>;
 type IMiddleware = (
-  msg: GroupMessage, api: Mirai['api'], state: IStateManager
+  msg: GroupMessage, api: Mirai['api']
 ) => Promise<boolean>;
 
-let triggers: {
-  [module: string]: {
-    [commandHead: string]: {
-      [subCommand in (string | '*')]: {
-        description: string,
-        trigger: ITrigger
-      }
-    }
-  }
-} = {};
 let middlewares: {
   module: string,
   description: string,
   middleware: IMiddleware
 }[] = [];
-
-export function registerCommand(
-  module: string,
-  command: [string] | [string, string],
-  description: string,
-  trigger: ITrigger
-) {
-  if (typeof triggers[module] === 'undefined') {
-    triggers[module] = {};
-  }
-  if (typeof triggers[module][command[0]] === 'undefined') {
-    triggers[module][command[0]] = {};
-  }
-  if (typeof command[1] !== 'undefined') {
-    if (typeof triggers[module][command[0]][command[1]] === 'undefined') {
-      triggers[module][command[0]][command[1]] = {
-        description, trigger
-      };
-    } else {
-      throw Error(`重复的指令定义: ${module}.${command[0]}.${command[1]}`);
-    }
-  } else {
-    if (typeof triggers[module][command[0]]['*'] === 'undefined') {
-      triggers[module][command[0]]['*'] = {
-        description, trigger
-      };
-    } else {
-      throw Error(`重复的指令定义: ${module}.${command[0]}`);
-    }
-  }
-}
 
 export function registerMiddleware(
   module: string,

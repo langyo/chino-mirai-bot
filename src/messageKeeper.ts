@@ -13,7 +13,7 @@ let map: {
 // 正则常量
 const commandRegExp = /^(留言)|(提醒).*/;
 
-registerMiddleware('留言', '留言模块', async (msg, _api, _state) => {
+registerMiddleware('留言', '留言模块', async (msg, _api) => {
   if (
     msg.messageChain[1].type === 'Plain' &&
     commandRegExp.test(msg.messageChain[1].text) &&

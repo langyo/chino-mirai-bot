@@ -8,7 +8,7 @@ let map: {
   }
 } = {};
 
-registerMiddleware('复读机', '复读机模块', async (msg, api, _state) => {
+registerMiddleware('复读机', '复读机模块', async (msg, api) => {
   if (msg.messageChain[1].type === 'Plain') {
     const content = msg.messageChain[1].text.trim();
     if (content.length <= 30 && Object.keys(map).indexOf(content) >= 0) {
