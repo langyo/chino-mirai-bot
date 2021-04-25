@@ -9,7 +9,7 @@ let ban: number[] = [];
 const morningRegExp = /^((早)|(.*(早安)|(早上好)|(哦哈呦)|(喵帕斯)|(贵安)))$/;
 const nightRegExp = /^.*晚安.*$/;
 
-registerMiddleware('早安', '早安问候模块', async (msg, _api, _state) => {
+registerMiddleware('早安', '早安问候模块', async (msg, _api) => {
   const qq = msg.sender.id;
   const reply = msg.reply;
 
@@ -54,7 +54,7 @@ registerMiddleware('早安', '早安问候模块', async (msg, _api, _state) => 
 });
 
 
-registerMiddleware('晚安', '晚安问候模块', async (msg, _api, _state) => {
+registerMiddleware('晚安', '晚安问候模块', async (msg, _api) => {
   const qq = msg.sender.id;
   const reply = msg.reply;
 
