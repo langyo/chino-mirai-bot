@@ -128,3 +128,6 @@ import './phonograph';
 import './repeater';
 import './ticketCollector';
 import './twitterMonitor';
+import './welcome';
+import './linkParser';
+import './lucky';
