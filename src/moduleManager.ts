@@ -6,7 +6,9 @@ import {
 registerMiddleware('模块管理', async (msg, api) => {
   if (msg.isAt(ROBOT_QQ)) {
     const str = msg.plain.trim();
-    if (/^状态$/.test(str)) {
+    if (/^提示$/.test(str)) {
+      msg.reply(` 详情请访问 https://github.com/langyo/chino-mirai-bot`, true);
+    } else if (/^状态$/.test(str)) {
       api.sendGroupMessage(`当前在运行的模块列表:\n${middlewares.map(
         n => `${n.module}${getGlobalState(
           'moduleManager', n.module, true
