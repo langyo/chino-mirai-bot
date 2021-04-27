@@ -4,7 +4,7 @@ import { registerMiddleware } from './index';
 let lastMessage: string = '';
 let hasSaidMessage: string[] = [];
 
-registerMiddleware('复读机', '复读机模块', async (msg, api) => {
+registerMiddleware('复读机', async (msg, api) => {
   const str = msg.plain.trim();
   if (lastMessage === msg.plain.trim() && hasSaidMessage.indexOf(str) < 0) {
     hasSaidMessage.push(str);
