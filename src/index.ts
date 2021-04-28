@@ -79,7 +79,7 @@ export const PlainMessageModel = model('plainMessage', new Schema({
   text: { type: String, sparse: true }
 }));
 export const AtMessageModel = model('atMessage', new Schema({
-  target: Number                            // 如果为 0 则视作 at 全体成员
+  target: Number
 }));
 export const FaceMessageModel = model('faceMessage', new Schema({
   faceId: Number,
@@ -103,7 +103,12 @@ export const MessageChainModel = model('message', new Schema({
   quote: Number,                          // 如果为 0 则视作没有引用其它消息
   messageChain: [new Schema({
     id: Schema.Types.ObjectId,
-    type: { type: String, enum: ['plain', 'at', 'face', 'media', 'rich'] }
+    type: {
+      type: String, enum: [
+        'Plain', 'At', 'AtAll', 'Face', 'Poke', 'Image', 'FlashImage', 'Voice',
+        'Xml', 'Json', 'App'
+      ]
+    }
   })]
 }));
 
@@ -113,23 +118,23 @@ async function saveMessage(msg: GroupMessage) {
     switch (obj.type) {
       case 'Plain':
         messageChain.push({
-          type: 'plain',
+          type: obj.type,
           id: (await (new PlainMessageModel({ text: obj.text })).save())._id
         });
         break;
       case 'At':
       case 'AtAll':
         messageChain.push({
-          type: 'at',
-          id: (await (new AtMessageModel({
-            target: (obj as MessageType.At).target || 0
-          })).save())._id
+          type: obj.type,
+          id: obj.type === 'At' ? (await (new AtMessageModel({
+            target: (obj as MessageType.At).target
+          })).save())._id : null
         });
         break;
       case 'Face':
       case 'Poke':
         messageChain.push({
-          type: 'at',
+          type: obj.type,
           id: (await (new FaceMessageModel({
             faceId: (obj as MessageType.Face).faceId || 0,
             name: obj.name
@@ -140,7 +145,7 @@ async function saveMessage(msg: GroupMessage) {
       case 'FlashImage':
       case 'Voice':
         messageChain.push({
-          type: 'at',
+          type: obj.type,
           id: (await (new MediaMessageModel({
             id: (obj as MessageType.Image).imageId
               || (obj as MessageType.FlashImage).imageId
@@ -154,7 +159,7 @@ async function saveMessage(msg: GroupMessage) {
       case 'Json':
       case 'App':
         messageChain.push({
-          type: 'rich',
+          type: obj.type,
           id: (await (new RichMessageModel({
             content: (obj as MessageType.Xml).xml
               || (obj as MessageType.Json).json

@@ -14,5 +14,5 @@ registerMiddleware('复读机', async (msg, api, _dbObj) => {
     }, 3 * 60 * 1000);
   }
   lastMessage = msg.plain.trim();
-  return true;
+  return false;
 });
