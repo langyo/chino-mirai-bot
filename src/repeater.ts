@@ -4,7 +4,7 @@ import { registerMiddleware } from './index';
 let lastMessage: string = '';
 let hasSaidMessage: string[] = [];
 
-registerMiddleware('复读机', async (msg, api) => {
+registerMiddleware('复读机', async (msg, api, _dbObj) => {
   const str = msg.plain.trim();
   if (lastMessage === msg.plain.trim() && hasSaidMessage.indexOf(str) < 0) {
     hasSaidMessage.push(str);
@@ -14,5 +14,5 @@ registerMiddleware('复读机', async (msg, api) => {
     }, 3 * 60 * 1000);
   }
   lastMessage = msg.plain.trim();
-  return false;
+  return true;
 });

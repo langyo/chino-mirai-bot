@@ -1,5 +1,5 @@
 // Mirai 初始化
-import Mirai from 'mirai-ts';
+import Mirai, { MessageType } from 'mirai-ts';
 import { GroupMessage } from 'mirai-ts/dist/types/message-type';
 
 export const ROBOT_QQ = 1931838621;
@@ -16,9 +16,10 @@ export const log = mirai.logger;
   mirai.on('message', async msg => {
     if (msg.type === 'GroupMessage') {
       log.info(`来自 ${msg.sender.id} 的消息：${msg.plain.trim()}`);
+      const dbObj = await saveMessage(msg);
       for (const { module, middleware, enable } of middlewares) {
         if (enable) {
-          if (await middleware(msg, mirai.api)) {
+          if (await middleware(msg, mirai.api, dbObj)) {
             log.info(`该消息已被"${module}"模块处理`);
             break;
           }
@@ -61,8 +62,8 @@ export function setGlobalState(module: string, key: string, value: any) {
   writeFileSync(GLOBAL_CONFIG_FILE_PATH, JSON.stringify(globalState));
 }
 
-// 针对各个用户的信息存贮设施，使用 Mongodb 数据库存储
-import { connect, connection as db } from 'mongoose';
+// 针对各个用户的信息存贮设施，使用 MongoDB 数据库存储
+import { connect, connection as db, Schema, Document, model } from 'mongoose';
 connect('mongodb://localhost/chino-mirai-bot', {
   useNewUrlParser: true, useUnifiedTopology: true
 });
@@ -74,9 +75,112 @@ db.on('error', err => {
 });
 export { db };
 
+export const PlainMessageModel = model('plainMessage', new Schema({
+  text: { type: String, sparse: true }
+}));
+export const AtMessageModel = model('atMessage', new Schema({
+  target: Number                            // 如果为 0 则视作 at 全体成员
+}));
+export const FaceMessageModel = model('faceMessage', new Schema({
+  faceId: Number,
+  name: String,
+  type: { type: String, enum: ['Face', 'Poke'] }
+}));
+export const MediaMessageModel = model('mediaMessage', new Schema({
+  id: String,
+  url: String,
+  type: { type: String, enum: ['Image', 'FlashImage', 'Voice'] }
+}));
+export const RichMessageModel = model('richMessage', new Schema({
+  content: String,
+  type: { type: String, enum: ['Xml', 'Json', 'App'] }
+}));
+
+export const MessageChainModel = model('message', new Schema({
+  id: { type: Number, index: true },
+  group: { type: Number, index: true },   // 如果为 0 则视作私聊
+  date: { type: Number, unique: true },
+  quote: Number,                          // 如果为 0 则视作没有引用其它消息
+  messageChain: [new Schema({
+    id: Schema.Types.ObjectId,
+    type: { type: String, enum: ['plain', 'at', 'face', 'media', 'rich'] }
+  })]
+}));
+
+async function saveMessage(msg: GroupMessage) {
+  const messageChain = [];
+  for (const obj of msg.messageChain) {
+    switch (obj.type) {
+      case 'Plain':
+        messageChain.push({
+          type: 'plain',
+          id: (await (new PlainMessageModel({ text: obj.text })).save())._id
+        });
+        break;
+      case 'At':
+      case 'AtAll':
+        messageChain.push({
+          type: 'at',
+          id: (await (new AtMessageModel({
+            target: (obj as MessageType.At).target || 0
+          })).save())._id
+        });
+        break;
+      case 'Face':
+      case 'Poke':
+        messageChain.push({
+          type: 'at',
+          id: (await (new FaceMessageModel({
+            faceId: (obj as MessageType.Face).faceId || 0,
+            name: obj.name
+          })).save())._id
+        });
+        break;
+      case 'Image':
+      case 'FlashImage':
+      case 'Voice':
+        messageChain.push({
+          type: 'at',
+          id: (await (new MediaMessageModel({
+            id: (obj as MessageType.Image).imageId
+              || (obj as MessageType.FlashImage).imageId
+              || (obj as MessageType.Voice).voiceId,
+            url: obj.url,
+            type: obj.type
+          })).save())._id
+        });
+        break;
+      case 'Xml':
+      case 'Json':
+      case 'App':
+        messageChain.push({
+          type: 'rich',
+          id: (await (new RichMessageModel({
+            content: (obj as MessageType.Xml).xml
+              || (obj as MessageType.Json).json
+              || (obj as MessageType.App).content,
+            type: obj.type
+          })).save())._id
+        });
+        break;
+      default:
+        break;
+    }
+  }
+  return await (new MessageChainModel({
+    id: msg.messageChain[0].id,
+    group: msg.sender.group.id,
+    date: msg.messageChain[0].time,
+    quote: (
+      (msg.messageChain.find(n => n.type === 'Quote') as MessageType.Quote) || { id: 0 }
+    ).id,
+    messageChain
+  })).save();
+}
+
 // 模块管理器
 type IMiddleware = (
-  msg: GroupMessage, api: Mirai['api']
+  msg: GroupMessage, api: Mirai['api'], dbObj: Document
 ) => Promise<boolean>;
 
 export let middlewares: {
@@ -96,17 +200,16 @@ export function registerMiddleware(
 }
 
 // 批量载入模块
+import './messageLibrary';
 import './moduleManager';
 import './greeting';
 import './imageLibrary';
 import './judgement';
-import './messageKeeper';
-import './messageLibrary';
 import './permissionForwarding';
 import './phonograph';
-import './repeater';
 import './ticketCollector';
 import './twitterMonitor';
 import './welcome';
 import './linkParser';
 import './lucky';
+import './repeater';

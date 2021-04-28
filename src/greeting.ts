@@ -9,7 +9,7 @@ let ban: number[] = [];
 const morningRegExp = /^((早)|(.*(早安)|(早上好)|(哦哈呦)|(喵帕斯)|(贵安)))$/;
 const nightRegExp = /^.*晚安.*$/;
 
-registerMiddleware('早安', async (msg, _api) => {
+registerMiddleware('早安', async (msg, _api, _dbObj) => {
   const qq = msg.sender.id;
 
   if (morningRegExp.test(msg.plain)) {
@@ -53,7 +53,7 @@ registerMiddleware('早安', async (msg, _api) => {
 });
 
 
-registerMiddleware('晚安', async (msg, _api) => {
+registerMiddleware('晚安', async (msg, _api, _dbObj) => {
   const qq = msg.sender.id;
 
   if (nightRegExp.test(msg.plain)) {

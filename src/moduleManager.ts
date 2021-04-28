@@ -3,7 +3,7 @@ import {
   middlewares, ROBOT_QQ
 } from './index';
 
-registerMiddleware('模块管理', async (msg, api) => {
+registerMiddleware('模块管理', async (msg, api, _dbObj) => {
   if (msg.isAt(ROBOT_QQ)) {
     const str = msg.plain.trim();
     if (/^提示$/.test(str)) {
