@@ -16,9 +16,10 @@ export const log = mirai.logger;
   mirai.on('message', async msg => {
     if (msg.type === 'GroupMessage') {
       log.info(`来自 ${msg.sender.id} 的消息：${msg.plain.trim()}`);
-      for (const { middleware, enable } of middlewares) {
+      for (const { module, middleware, enable } of middlewares) {
         if (enable) {
           if (await middleware(msg, mirai.api)) {
+            log.info(`该消息已被"${module}"模块处理`);
             break;
           }
         }
