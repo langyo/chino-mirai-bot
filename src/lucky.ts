@@ -1,15 +1,30 @@
-import { registerMiddleware } from './index';
+import { Schema, model } from 'mongoose';
+import { registerMiddleware, log } from './index';
 
 // 幸运值缓存
-let map: { [qq: number]: number } = {};
+const LuckyRankModel = model('luckyRank', new Schema({
+  id: { type: Number, index: true },
+  date: Date,       // 这里的日期只会精确到天，时分秒部分会设置为零
+  value: Number
+}));
 
 registerMiddleware('今日人品', async (msg, _api, _dbObj) => {
-  const str = msg.plain.trim();
-  if (str === '今日人品') {
-    if (typeof map[msg.sender.id] === 'undefined') {
-      map[msg.sender.id] = Math.floor(Math.random() * 100);
+  if (msg.plain.trim() === '今日人品') {
+    const now = new Date();
+    if (!await LuckyRankModel.findOne({
+      id: msg.sender.id,
+      date: new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    }).exec()) {
+      await (new LuckyRankModel({
+        id: msg.sender.id,
+        date: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        value: Math.floor(Math.random() * 100)
+      })).save();
     }
-    const val = map[msg.sender.id];
+    const val = (await LuckyRankModel.findOne({
+      id: msg.sender.id,
+      date: new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    }).exec() as any)?.value;
     const rawHead = ` 嗨~您今天的人品值是 ${val}~`;
     if (val <= 30) {
       msg.reply(rawHead + '好像运气不太好呢~', true);
