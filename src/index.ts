@@ -99,7 +99,7 @@ export const RichMessageModel = model('richMessage', new Schema({
 export const MessageChainModel = model('message', new Schema({
   id: { type: Number, index: true },
   group: { type: Number, index: true },   // 如果为 0 则视作私聊
-  date: { type: Number, unique: true },
+  date: { type: Date, index: true },
   quote: Number,                          // 如果为 0 则视作没有引用其它消息
   messageChain: [new Schema({
     id: Schema.Types.ObjectId,
@@ -175,7 +175,7 @@ async function saveMessage(msg: GroupMessage) {
   return await (new MessageChainModel({
     id: msg.messageChain[0].id,
     group: msg.sender.group.id,
-    date: msg.messageChain[0].time,
+    date: new Date(msg.messageChain[0].time * 1000),
     quote: (
       (msg.messageChain.find(n => n.type === 'Quote') as MessageType.Quote) || { id: 0 }
     ).id,
