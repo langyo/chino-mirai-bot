@@ -17,7 +17,7 @@ registerMiddleware('早安', async (msg, _api, _dbObj) => {
       return;
     }
     if (rank.map(n => n.qq).indexOf(qq) >= 0) {
-      msg.reply('你已经说过早安了哦~', true);
+      msg.reply('您已经说过早安了哦~', true);
       // 一小时内不再回复
       ban.push(qq);
       setInterval(() => {
@@ -26,7 +26,7 @@ registerMiddleware('早安', async (msg, _api, _dbObj) => {
     } else {
       const now = new Date();
       if (now.getHours() <= 8 && now.getHours() >= 5) {
-        msg.reply(` 早~${rank.length < 30 ? `你是第${rank.length + 1}个起床的哦~` : ''}`, true);
+        msg.reply(` 早~${rank.length < 30 ? `您是第${rank.length + 1}个起床的哦~` : ''}`, true);
         rank.push({ date: now, qq });
       } else if (now.getHours() < 5) {
         msg.reply(` 好像还太早了吧？`, true);
@@ -61,7 +61,7 @@ registerMiddleware('晚安', async (msg, _api, _dbObj) => {
       return;
     }
     if (rank.map(n => n.qq).indexOf(qq) >= 0) {
-      msg.reply('咦？你原来还没睡的嘛~赶快睡吧~', true);
+      msg.reply('咦？您原来还没睡的嘛~赶快睡吧~', true);
       // 一小时内不再回复
       ban.push(qq);
       setInterval(() => {

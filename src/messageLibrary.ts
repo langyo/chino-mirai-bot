@@ -1,8 +1,7 @@
 import { Message } from 'mirai-ts';
 import { Schema, model } from 'mongoose';
-import { SingleMessage } from 'mirai-ts/dist/types/message-type';
 import {
-  registerMiddleware, log,
+  registerMiddleware, log, ROBOT_QQ,
   MessageChainModel, PlainMessageModel, MediaMessageModel, AtMessageModel, FaceMessageModel
 } from './index';
 
@@ -20,13 +19,18 @@ registerMiddleware('留言', async (msg, _api, dbObj) => {
     commandRegExp.test(msg.messageChain[1].text) &&
     msg.messageChain[2]?.type === 'At'
   ) {
-    await (new MessageInboxModel({
-      sender: msg.sender.id,
-      receiver: msg.messageChain[2].target,
-      content: dbObj._id
-    })).save();
-    log.info(`已为 ${msg.sender.id} 创建提醒：${msg.messageChain.slice(3)}`);
-    msg.reply(' 提醒创建成功~', true);
+    if (msg.messageChain[2].target === ROBOT_QQ) {
+      log.info(`已拦截对机器人自身的提醒创建请求`);
+      msg.reply(' 这样是不可以的哦~', true);
+    } else {
+      await (new MessageInboxModel({
+        sender: msg.sender.id,
+        receiver: msg.messageChain[2].target,
+        content: dbObj._id
+      })).save();
+      log.info(`已为 ${msg.sender.id} 创建提醒：${msg.messageChain.slice(3)}`);
+      msg.reply(' 提醒创建成功~', true);
+    }
     return true;
   }
   const query = await MessageInboxModel.find({ receiver: msg.sender.id }).exec();
