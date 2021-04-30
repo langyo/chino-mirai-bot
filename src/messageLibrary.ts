@@ -1,4 +1,4 @@
-import { Message } from 'mirai-ts';
+import { Message, MessageType } from 'mirai-ts';
 import { Schema, model } from 'mongoose';
 import {
   registerMiddleware, log, ROBOT_QQ,
@@ -21,9 +21,9 @@ registerMiddleware('留言', async (msg, _api, dbObj) => {
     shortInboxRegExp.test(msg.messageChain[1].text) &&
     msg.messageChain[2]?.type === 'At'
   ) {
-    if (msg.messageChain[2].target === ROBOT_QQ) {
+    if (msg.isAt(ROBOT_QQ)) {
       log.info(`已拦截对机器人自身的提醒创建请求`);
-      msg.reply(' 这样是不可以的哦~', true);
+      msg.reply(' 不可以对我留言的哦~', true);
     } else {
       await (new MessageInboxModel({
         sender: msg.sender.id,
@@ -92,7 +92,7 @@ const LongMessageInboxModel = model('longMessageInbox', new Schema({
 const longInboxRegExp = /^长留言.*/;
 const recordingMap: {
   [qq: number]: {
-    target: number, content: Schema.Types.ObjectId[]
+    target: number[], content: Schema.Types.ObjectId[]
   }
 } = {};
 
@@ -103,23 +103,28 @@ registerMiddleware('长留言', async (msg, _api, dbObj) => {
     longInboxRegExp.test(msg.messageChain[1].text) &&
     msg.messageChain[2]?.type === 'At'
   ) {
-    if (msg.messageChain[2].target === ROBOT_QQ) {
+    if (msg.isAt(ROBOT_QQ)) {
       log.info(`已拦截对机器人自身的提醒创建请求`);
-      msg.reply(' 这样是不可以的哦~', true);
+      msg.reply(' 不可以对我留言的哦~', true);
+    } else if (msg.messageChain.length > 3) {
+      recordingMap[msg.sender.id] = { target: msg.messageChain.filter(n => n.type === 'At').map((n: MessageType.At) => n.target), content: [] };
+      msg.reply(` 姬姬开始录制留言喽~单独说出"over"以结束留言~（同时对${recordingMap[msg.sender.id].target.length}人的留言）`, true);
     } else {
-      recordingMap[msg.sender.id] = { target: msg.messageChain[2].target, content: [] };
+      recordingMap[msg.sender.id] = { target: [msg.messageChain[2].target], content: [] };
       msg.reply(' 姬姬开始录制留言喽~单独说出"over"以结束留言~', true);
     }
     return true;
   } else if (recordingMap[msg.sender.id]) {
     if (msg.plain.trim() === 'over') {
       log.info(`已响应 ${msg.sender.id} 的长留言结束请求`);
-      await (new LongMessageInboxModel({
-        sender: msg.sender.id, receiver: recordingMap[msg.sender.id].target,
-        content: recordingMap[msg.sender.id].content
-      })).save();
+      for (const target of recordingMap[msg.sender.id].target) {
+        await (new LongMessageInboxModel({
+          sender: msg.sender.id, receiver: target,
+          content: recordingMap[msg.sender.id].content
+        })).save();
+      }
+      msg.reply(` 提醒创建成功~${recordingMap[msg.sender.id].target.length > 1 ? `（同时对${recordingMap[msg.sender.id].target.length}人的留言）` : ''}`, true);
       delete recordingMap[msg.sender.id];
-      msg.reply(' 提醒创建成功~', true);
     } else {
       log.info(`已响应 ${msg.sender.id} 的长留言内容追加：${msg.messageChain}`);
       recordingMap[msg.sender.id].content.push(dbObj._id);
